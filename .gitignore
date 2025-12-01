@@ -1,0 +1,6 @@
+*.swp
+*.gb
+*.gbc
+*.o
+.DS_Store
+bin/
