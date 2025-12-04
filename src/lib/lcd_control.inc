@@ -19,16 +19,16 @@ LCDControl:
   ld [rLCDC], a
   ret
 
-.setUpdate
-  ld b, a
-  ld a, 1
-  ld [SCREEN_UPDATE], a
-  ld a, b
-  ret
-
-.resetUpdate
-  ld b, a
-  xor a
-  ld [SCREEN_UPDATE], a
-  ld a, b
-  ret
+; .setUpdate
+;   ld b, a
+;   ld a, 1
+;   ld [SCREEN_UPDATE], a
+;   ld a, b
+;   ret
+;
+; .resetUpdate
+;   ld b, a
+;   xor a
+;   ld [SCREEN_UPDATE], a
+;   ld a, b
+;   ret

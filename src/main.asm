@@ -27,22 +27,72 @@ include "src/lib/fast_variables.inc"
 section "Data", wram0
 include "src/lib/variables.inc"
 
+section "VBlank Interrupt", ROM0[$0040]
+VBlankInterrupt:
+	push af
+	push bc
+	push de
+	push hl
+	jp VBlankHandler
+
 section "Game Code", ROM0
+VBlankHandler:
+  ; TODO: Should probably just store the address of the functions in RAM
+  ldh a, [message_display]
+  cp 0
+  jr z, .drawGameState
+  cp 1
+  call z, clearHint
+  cp 2
+  call z, drawTooHigh
+  cp 3
+  call z, drawTooLow
+  cp 4
+  call z, drawYouWon
+  cp 5
+  call z, drawYouLose
+.drawGameState:
+  ldh a, [game_state]
+  cp 4
+  call z, drawGame
+  cp 1
+  call z, transitionStartToLevelSelect
+  cp 2
+  call z, drawLevelSelect
+  cp 3
+  call z, transitionLevelSelectToGame
+
+  ldh a, [sub_message_display]
+  cp 0
+  jr z, .exit
+  cp 1
+  call z, clearOtherMessage
+  cp 2
+  call z, drawChooseLevel
+.exit:
+  pop hl
+	pop de
+	pop bc
+	pop af
+	reti
+
 Start:
   CopyConstToVar rTAC, TACF_START
-  CopyVars Seed, rDIV
-  CopyVars Seed+1, rDIV
-  CopyVars Seed+2, rDIV
+  CopyHighVars Seed, rDIV
+  CopyHighVars Seed+1, rDIV
+  CopyHighVars Seed+2, rDIV
 
 .initDisplay
   xor a
-  ld [rBGP], a
-  ld [rOBP0], a
-  ld [rOBP1], a
-  ld [rSCY], a
-  ld [rSCX], a
+  ldh [rBGP], a
+  ldh [rOBP0], a
+  ldh [rOBP1], a
+  ldh [rSCY], a
+  ldh [rSCX], a
+  ldh [game_state], a
+  ldh [message_display], a
+  ldh [sub_message_display], a
 
-  call LCDControl.waitVBlank
   call LCDControl.turnOff
 
 .copyTiles
@@ -80,20 +130,20 @@ setupGame:
 
 .main
   call drawTitleScreen
-
   call LCDControl.turnOn
   call fadeIn
+
   jr start_input
 
 start_input:
   ReadPad
 
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	cp a, 0
   call z, resetPress
 
   ; wait til button is released
-  ld a, [_PAD_PRESSED]
+  ldh a, [_PAD_PRESSED]
   cp a, 1
   jp z, start_input
 
@@ -113,110 +163,113 @@ start_level_input:
   ld a, LEVEL_Y_MIN
   ld [arrowData_YPos], a
 
-  call LCDControl.waitVBlank
-
-  xor a
-  ld [BEGIN_GUESS+0], a
-  ld [BEGIN_GUESS+1], a
-  ld [BEGIN_GUESS+2], a
-  ld [cursorData_YPos], a
-  ld [cursorData_XPos], a
-  call draw_cursor
-  jr level_input
-
 level_input:
   ReadPad
 
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	cp a, 0
   call z, resetPress
 
   ; wait til button is released
-  ld a, [_PAD_PRESSED]
+  ldh a, [_PAD_PRESSED]
   cp a, 1
   jp z, level_input
 
   ; up
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_UP
 	call nz, moveArrowUp
 
   ; down
-	ld a, [_PAD]
+	ldh a, [_PAD]
 	and PADF_DOWN
 	call nz, moveArrowDown
 
   ; A
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_A
   jp nz, select_level
 
-  call LCDControl.waitVBlank
-  ld a, [arrowData_XPos]
-  ld [arrowSprite_XPos], a
-  ld a, [arrowData_YPos]
-  ld [arrowSprite_YPos], a
-
+  halt
   jr level_input
+
+select_level:
+  PadPressed
+  ld a, [level_select]
+  cp a, 0
+  call z, setLevelTo1
+  cp a, 1
+  call z, setLevelTo2
+  cp a, 2
+  call z, setLevelTo3
+  cp a, 3
+  call z, setLevelTo4
+
+  xor a
+  ld [attempts], a
+  call initVariables
+
+  GetDisplayNumber max_attempts, display_max_attempts, 2
+  GetDisplayNumber attempts, display_attempts, 2
+
+  ld a, 3
+  ldh [game_state], a
+
+
+  jp input
 
 input:
 	ReadPad
 
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	cp a, 0
   call z, resetPress
 
   ; wait til button is released
-  ld a, [_PAD_PRESSED]
+  ldh a, [_PAD_PRESSED]
   cp a, 1
   jp z, input
 
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_UP
 	call nz, moveCursorUp
 
   ; down
-	ld a, [_PAD]
+	ldh a, [_PAD]
 	and PADF_DOWN
 	call nz, moveCursorDown
 
   ; left
- 	ld a, [_PAD]
+ 	ldh a, [_PAD]
 	and PADF_LEFT
 	call nz, moveCursorLeft
 
   ; right
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_RIGHT
 	call nz, moveCursorRight
 
   ; B
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_B
   call nz, select.bPress
 
   ; A
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_A
   call nz, select
 
   ; Start
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_START
 	; call nz, select.startPress
 
   ; Start
-  ld a, [_PAD]
+  ldh a, [_PAD]
 	and PADF_SELECT
 	call nz, select.startPress
 
-.drawFrame:
-  GetDisplayNumber attempts, display_attempts, 2
-
-  call LCDControl.waitVBlank
-  call draw_cursor
-  call drawGuess
-  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
+  halt
 
   jp input
 
@@ -240,50 +293,26 @@ initVariables:
   ld [pad_column_selection], a
   ld [pad_row_selection], a
   ld [game_started], a
-  ld [attempts], a
-  ld [display_attempts], a
-  ld [display_attempts+1], a
   ld [display_max_attempts], a
   ld [display_max_attempts+1], a
   ret
 
-select_level:
-  PadPressed
-  ld a, [level_select]
-  cp a, 0
-  call z, setLevelTo1
-  cp a, 1
-  call z, setLevelTo2
-  cp a, 2
-  call z, setLevelTo3
-  cp a, 3
-  call z, setLevelTo4
-
-  GetDisplayNumber max_attempts, display_max_attempts, 2
-  GetDisplayNumber attempts, display_attempts, 2
-  call LCDControl.waitVBlank
-  call clearHint
-  call clearOtherMessage
-  call setCursorOrigin
-  xor a
-  ld [arrowSprite_XPos], a
-  ld [arrowSprite_YPos], a
-  DrawNumber BEGIN_MAX_ATTEMPTS, display_max_attempts, 2
-  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
-  jp input
 
 setLevelTo1:
   ld a, 99
   ld [max_attempts], a
   ret
+
 setLevelTo2:
   ld a, 20
   ld [max_attempts], a
   ret
+
 setLevelTo3:
   ld a, 7
   ld [max_attempts], a
   ret
+
 setLevelTo4:
   ld a, 5
   ld [max_attempts], a
@@ -316,16 +345,19 @@ moveArrowUp:
 
 resetPress:
   xor a
-  ld [_PAD_PRESSED], a
+  ldh [_PAD_PRESSED], a
   ret
 
 startGame:
   PadPressed
   call Reseed
   call RandomNumber
-  ld [RN], a
+  ldh [RN], a
   ld a, 1
   ld [game_started], a
+  ldh [game_state], a
+  xor a
+  ld [sub_message_display], a
 
   call LCDControl.waitVBlank
   call fadeOut
@@ -334,6 +366,60 @@ startGame:
   call LCDControl.turnOn
   call fadeIn
   call setCursorOrigin
+
+  ; Enable VBlank Interrupt
+	ld a, IEF_VBLANK
+  ld b, a
+	ldh [rIE], a
+	xor a, a
+	ldh [rIF], a
+  ei
+
+  ret
+
+transitionStartToLevelSelect: ; game_state = 1
+  xor a
+  ld [BEGIN_GUESS+0], a
+  ld [BEGIN_GUESS+1], a
+  ld [BEGIN_GUESS+2], a
+  ld [cursorData_YPos], a
+  ld [cursorData_XPos], a
+  call draw_cursor
+  ld a, 2
+  ldh [game_state], a
+  ret
+
+drawLevelSelect: ; game_state = 2
+  ld a, [arrowData_XPos]
+  ld [arrowSprite_XPos], a
+  ld a, [arrowData_YPos]
+  ld [arrowSprite_YPos], a
+  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
+  ret
+
+transitionLevelSelectToGame: ; game_state = 3
+  call clearHint
+  call clearOtherMessage
+  call setCursorOrigin
+
+  xor a
+  ld [arrowSprite_XPos], a
+  ld [arrowSprite_YPos], a
+
+  ld a, 1
+  ldh [message_display], a
+  ldh [sub_message_display], a
+
+  DrawNumber BEGIN_MAX_ATTEMPTS, display_max_attempts, 2
+  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
+  ld a, 4
+  ldh [game_state], a
+  ret
+
+drawGame: ; game_state = 4
+  call draw_cursor
+  call drawGuess
+  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
   ret
 
 setCursorOrigin:
@@ -373,7 +459,7 @@ moveCursorRight:
   ret
 
 moveCursorLeft:
-  VariableSet _PAD_PRESSED, 1
+  PadPressed
   ld a, [cursorData_XPos]
   cp a, NUMPAD_MENU_X_MIN
   ret z
@@ -387,7 +473,7 @@ moveCursorLeft:
   ret
 
 moveCursorDown:
-  VariableSet _PAD_PRESSED, 1
+  PadPressed
   ld a, [cursorData_YPos]
   cp a, NUMPAD_MENU_Y_MAX
   ret z
@@ -400,7 +486,7 @@ moveCursorDown:
   ret
 
 moveCursorUp:
-  VariableSet _PAD_PRESSED, 1
+  PadPressed
   ld a, [cursorData_YPos]
   cp a, NUMPAD_MENU_Y_MIN
   ret z
@@ -413,7 +499,7 @@ moveCursorUp:
   ret
 
 select:
-  VariableSet _PAD_PRESSED, 1
+  PadPressed
   ld a, [pad_row_selection]
   cp 0
   jr z, .selectRow0
@@ -511,7 +597,7 @@ select:
   ret
 
 .bPress:
-  VariableSet _PAD_PRESSED, 1
+  PadPressed
 .selectBackspace:
   ld a, [guessData_Length]
   cp 0
@@ -537,144 +623,96 @@ select:
   ld a, [attempts]
   inc a
   ld [attempts], a
+  GetDisplayNumber attempts, display_attempts, 2
 
-
-  call clearHint
+  ; call clearHint
   call setCursorOrigin
-  ld a, [RN]
+  ldh a, [RN]
   ld b, a
   ld a, [guessData_Value]
   cp b
-  jr z, drawYouWon
+  jr z, setWin
 
   ld a, [max_attempts]
   ld b, a
   ld a, [attempts]
   cp b
-  jr nc, drawYouLose
+  jr nc, setLose
 
-  ld a, [RN]
+  ldh a, [RN]
   ld b, a
   ld a, [guessData_Value]
 
   sub b
-  jp c, drawTooLow
-  jp nc, drawTooHigh
+  jp c, setTooLow
+  jp nc, setTooHigh
 
   ret
-
-drawYouWon:
-  ld hl, BEGIN_HINT
-  ld de, YouWonMessage
-  ld bc, YouWonMessage.end - YouWonMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
-  jr drawChooseLevel
-
-drawYouLose:
-  ld hl, BEGIN_HINT
-  ld de, YouLoseMessage
-  ld bc, YouLoseMessage.end - YouLoseMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
-  jr drawChooseLevel
-
-drawChooseLevel:
-  call LCDControl.waitVBlank
-  DisplayAttempts
-  ld hl, BEGIN_PRESS_START
-  ld de, ChooseLevelMessage
-  ld bc, ChooseLevelMessage.end - ChooseLevelMessage
-.loopChooseLevel:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loopChooseLevel
-  jr restartGame
 
 restartGame:
   ld sp, $DFFF
+  ld a, 1
+  ldh [game_state], a
   call Reseed
   call RandomNumber
-  ld [RN], a
-  call initVariables
+  ldh [RN], a
   xor a
   ld [cursorData_XPos], a
   ld [cursorData_YPos], a
-  call initVariables
   jp start_level_input
 
-drawTooHigh:
+setTooHigh:
+  ld a, 2
+  ldh [message_display], a
   call guess.init
-  ld hl, BEGIN_HINT
-  ld de, TooHighMessage
-  ld bc, TooHighMessage.end - TooHighMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
   ret
 
-drawTooLow:
+setTooLow:
+  ld a, 3
+  ldh [message_display], a
   call guess.init
-  ld hl, BEGIN_HINT
-  ld de, TooLowMessage
-  ld bc, TooLowMessage.end - TooLowMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
   ret
 
-clearHint:
-  ld hl, BEGIN_HINT
-  ld de, ClearMessage
-  ld bc, ClearMessage.end - ClearMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+setWin:
+  ld a, 4
+  ldh [message_display], a
+  ld a, 2
+  ldh [sub_message_display], a
+  jp restartGame
+
+setLose:
+  ld a, 5
+  ldh [message_display], a
+  ld a, 2
+  ldh [sub_message_display], a
+  jp restartGame
+
+drawYouWon: ; message_display = 3
+  DrawMessage BEGIN_HINT, YouWonMessage
   ret
 
-clearOtherMessage:
-  ld hl, BEGIN_PRESS_START
-  ld de, ClearMessage
-  ld bc, ClearMessage.end - ClearMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+drawYouLose: ; message_dipslay = 4
+  DrawMessage BEGIN_HINT, YouLoseMessage
+  ret
+
+drawChooseLevel: ; sub_message_display = 1
+  DrawMessage BEGIN_PRESS_START, ChooseLevelMessage
+  ret
+
+drawTooHigh: ; message_display = 1
+  DrawMessage BEGIN_HINT, TooHighMessage
+  ret
+
+drawTooLow: ; message_display = 2
+  DrawMessage BEGIN_HINT, TooLowMessage
+  ret
+
+clearHint: ; message_display = 0
+  DrawMessage BEGIN_HINT, ClearMessage
+  ret
+
+clearOtherMessage: ; sub_message_display = 0
+  DrawMessage BEGIN_PRESS_START, OtherClearMessage
   ret
 
 include "src/lib/lcd_control.inc"
@@ -691,32 +729,29 @@ include "assets/map.inc"
 include "assets/title_map.inc"
 
 TooLowMessage:
-  db "Too Low"
+  db "Too Low     "
 .end
 
 TooHighMessage:
-  db "Too High"
+  db "Too High    "
 .end
 
 YouWonMessage:
-  db "You Won!"
+  db "You Won!    "
 .end
 
 YouLoseMessage:
-  db "You Lose!"
-.end
-
-PressStartMessage:
-  db "Press  Start"
+  db "You Lose!   "
 .end
 
 ChooseLevelMessage:
-  db "Choose Level"
+  db "Choose a Level"
 .end
 
 ClearMessage:
   db "            "
 .end
 
-; include "assets/finish_screen_map.inc"
-; include "assets/title_screen_map.inc"
+OtherClearMessage:
+  db "              "
+.end
