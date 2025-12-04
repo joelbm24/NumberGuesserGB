@@ -2,26 +2,26 @@
 
 macro ReadPad
     VariableSet rP1, %00100000
-    ld a, [rP1]
-    ld a, [rP1]
-    ld a, [rP1]
-    ld a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
 
     and $0F
     swap a
     ld b, a
 
     VariableSet rP1, %00010000
-    ld a, [rP1]
-    ld a, [rP1]
-    ld a, [rP1]
-    ld a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
 
     and $0F
     or b
 
     cpl
-    ld [_PAD], a
+    ldh [_PAD], a
   endm
 
 macro DrawNumber ; TO_AREA, TILES_START, AMOUNT
@@ -38,7 +38,7 @@ endm
 
 macro PadPressed
   ld a, 1
-  ld [_PAD_PRESSED], a
+  ldh [_PAD_PRESSED], a
 endm
 
 
@@ -85,6 +85,11 @@ endm
 macro CopyVars ; TO, FROM
   ld a, [\2]
   ld [\1], a
+endm
+
+macro CopyHighVars ; TO, FROM
+  ld a, [\2]
+  ldh [\1], a
 endm
 
 macro CompareVars ; Var1, Var2
