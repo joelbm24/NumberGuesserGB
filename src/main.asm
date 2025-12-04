@@ -37,6 +37,7 @@ VBlankInterrupt:
 
 section "Game Code", ROM0
 VBlankHandler:
+  ; TODO: Should probably just store the address of the functions in RAM
   ldh a, [message_display]
   cp 0
   jr z, .drawGameState
