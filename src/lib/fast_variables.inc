@@ -6,9 +6,6 @@ Seed:
 RN:
   ds 5
 
-SCREEN_UPDATE:
-  ds 1
-
 _PAD:
   ds 1
 

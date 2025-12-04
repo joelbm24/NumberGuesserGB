@@ -53,14 +53,14 @@ VBlankHandler:
   call z, drawYouLose
 .drawGameState:
   ldh a, [game_state]
+  cp 4
+  call z, drawGame
   cp 1
   call z, transitionStartToLevelSelect
   cp 2
   call z, drawLevelSelect
   cp 3
   call z, transitionLevelSelectToGame
-  cp 4
-  call z, drawGame
 
   ldh a, [sub_message_display]
   cp 0
@@ -93,7 +93,6 @@ Start:
   ldh [message_display], a
   ldh [sub_message_display], a
 
-  call LCDControl.waitVBlank
   call LCDControl.turnOff
 
 .copyTiles
@@ -156,10 +155,7 @@ start_input:
   ld a, [game_started]
   cp 1
   jr nz, start_input
-  jr init_level_input
-
-init_level_input:
-
+  jr start_level_input
 
 start_level_input:
   ld a, LEVEL_X_MAX
@@ -209,11 +205,16 @@ select_level:
   cp a, 3
   call z, setLevelTo4
 
+  xor a
+  ld [attempts], a
+  call initVariables
+
   GetDisplayNumber max_attempts, display_max_attempts, 2
   GetDisplayNumber attempts, display_attempts, 2
 
   ld a, 3
   ldh [game_state], a
+
 
   jp input
 
@@ -268,7 +269,6 @@ input:
 	and PADF_SELECT
 	call nz, select.startPress
 
-  GetDisplayNumber attempts, display_attempts, 2
   halt
 
   jp input
@@ -293,9 +293,6 @@ initVariables:
   ld [pad_column_selection], a
   ld [pad_row_selection], a
   ld [game_started], a
-  ld [attempts], a
-  ld [display_attempts], a
-  ld [display_attempts+1], a
   ld [display_max_attempts], a
   ld [display_max_attempts+1], a
   ret
@@ -397,6 +394,7 @@ drawLevelSelect: ; game_state = 2
   ld [arrowSprite_XPos], a
   ld a, [arrowData_YPos]
   ld [arrowSprite_YPos], a
+  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
   ret
 
 transitionLevelSelectToGame: ; game_state = 3
@@ -625,8 +623,9 @@ select:
   ld a, [attempts]
   inc a
   ld [attempts], a
+  GetDisplayNumber attempts, display_attempts, 2
 
-  call clearHint
+  ; call clearHint
   call setCursorOrigin
   ldh a, [RN]
   ld b, a
@@ -660,19 +659,18 @@ restartGame:
   xor a
   ld [cursorData_XPos], a
   ld [cursorData_YPos], a
-  call initVariables
   jp start_level_input
 
 setTooHigh:
-  call guess.init
   ld a, 2
   ldh [message_display], a
+  call guess.init
   ret
 
 setTooLow:
-  call guess.init
   ld a, 3
   ldh [message_display], a
+  call guess.init
   ret
 
 setWin:
@@ -690,101 +688,31 @@ setLose:
   jp restartGame
 
 drawYouWon: ; message_display = 3
-  ld hl, BEGIN_HINT
-  ld de, YouWonMessage
-  ld bc, YouWonMessage.end - YouWonMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_HINT, YouWonMessage
   ret
 
 drawYouLose: ; message_dipslay = 4
-  ld hl, BEGIN_HINT
-  ld de, YouLoseMessage
-  ld bc, YouLoseMessage.end - YouLoseMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_HINT, YouLoseMessage
   ret
 
 drawChooseLevel: ; sub_message_display = 1
-  ld hl, BEGIN_PRESS_START
-  ld de, ChooseLevelMessage
-  ld bc, ChooseLevelMessage.end - ChooseLevelMessage
-.loopChooseLevel:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loopChooseLevel
+  DrawMessage BEGIN_PRESS_START, ChooseLevelMessage
   ret
 
 drawTooHigh: ; message_display = 1
-  ld hl, BEGIN_HINT
-  ld de, TooHighMessage
-  ld bc, TooHighMessage.end - TooHighMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_HINT, TooHighMessage
   ret
 
 drawTooLow: ; message_display = 2
-  ld hl, BEGIN_HINT
-  ld de, TooLowMessage
-  ld bc, TooLowMessage.end - TooLowMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_HINT, TooLowMessage
   ret
 
 clearHint: ; message_display = 0
-  ld hl, BEGIN_HINT
-  ld de, ClearMessage
-  ld bc, ClearMessage.end - ClearMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_HINT, ClearMessage
   ret
 
 clearOtherMessage: ; sub_message_display = 0
-  ld hl, BEGIN_PRESS_START
-  ld de, ClearMessage
-  ld bc, ClearMessage.end - ClearMessage
-.loop:
-  ld a, [de]
-  ld [hli], a
-  inc de
-  dec bc
-  ld a, b
-  or c
-  jr nz, .loop
+  DrawMessage BEGIN_PRESS_START, OtherClearMessage
   ret
 
 include "src/lib/lcd_control.inc"
@@ -816,14 +744,14 @@ YouLoseMessage:
   db "You Lose!   "
 .end
 
-PressStartMessage:
-  db "Press  Start"
-.end
-
 ChooseLevelMessage:
-  db "Choose Level"
+  db "Choose a Level"
 .end
 
 ClearMessage:
   db "            "
+.end
+
+OtherClearMessage:
+  db "              "
 .end

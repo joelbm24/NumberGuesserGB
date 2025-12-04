@@ -118,7 +118,23 @@ macro GetDisplayNumber ; Number, DisplayAddr, Length
   call getDisplayNumber
 endm
 
-macro DisplayAttempts
-  GetDisplayNumber attempts, display_attempts, 2
-  DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
+macro DrawMessage ; Adress, Message
+  ld hl, \1
+  ld de, \2
+  ld bc, \2.end - \2
+.loop:
+  ld a, [de]
+  ld [hli], a
+  inc de
+  dec bc
+  ld a, b
+  or c
+  jr nz, .loop
+  ret
+
 endm
+
+; macro DisplayAttempts
+;   GetDisplayNumber attempts, display_attempts, 2
+;   DrawNumber BEGIN_ATTEMPTS, display_attempts, 2
+; endm
