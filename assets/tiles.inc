@@ -9,43 +9,43 @@ DB $C0, $C0, $E0, $E0, $F0, $F0, $F8, $F8, $F8, $F8, $F0, $F0, $E0, $E0, $C0, $C
 .end
 
 VerticalBorderTile:
-DB $6E, $6E, $76, $76, $6E, $6E, $76, $76, $6E, $6E, $76, $76, $6E, $6E, $76, $76 ; $02 2
+DB $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A ; $02 2
 .end
 
 HorizontalBorderTile:
-DB $00, $00, $FF, $FF, $FF, $FF, $55, $55, $AA, $AA, $FF, $FF, $FF, $FF, $00, $00 ; $03 3
+DB $00, $00, $00, $FF, $FF, $00, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $00, $00 ; $03 3
 .end
 
 JunctionBLTile:
-DB $6E, $6E, $77, $77, $6F, $6F, $75, $75, $3A, $3A, $1F, $1F, $0F, $0F, $00, $00 ; $04 4
+DB $3C, $5A, $3C, $5B, $3F, $58, $3F, $5F, $3F, $5F, $3F, $40, $00, $7F, $00, $00 ; $04 4
 .end
 
 JunctionBTile:
-DB $6E, $6E, $F7, $F7, $EF, $EF, $55, $55, $AA, $AA, $FF, $FF, $FF, $FF, $00, $00 ; $05 5
+DB $3C, $5A, $3C, $DB, $FF, $18, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $00, $00 ; $05 5
 .end
 
 JunctionBRTile:
-DB $6E, $6E, $F6, $F6, $EE, $EE, $56, $56, $AC, $AC, $F8, $F8, $F0, $F0, $00, $00 ; $06 6
+DB $3C, $5A, $3C, $DA, $FC, $1A, $FC, $FA, $FC, $FA, $FC, $02, $00, $FE, $00, $00 ; $06 6
 .end
 
 JunctionLTile:
-DB $6E, $6E, $77, $77, $6F, $6F, $75, $75, $6A, $6A, $77, $77, $6F, $6F, $76, $76 ; $07 7
+DB $3C, $5A, $3C, $5B, $3F, $58, $3F, $5F, $3F, $5F, $3F, $58, $3C, $5B, $3C, $5A ; $07 7
 .end
 
 JunctionRTile:
-DB $6E, $6E, $F6, $F6, $EE, $EE, $56, $56, $AE, $AE, $F6, $F6, $EE, $EE, $76, $76 ; $08 8
+DB $3C, $5A, $3C, $DA, $FC, $1A, $FC, $FA, $FC, $FA, $FC, $1A, $3C, $DA, $3C, $5A ; $08 8
 .end
 
 JuntionTLTile:
-DB $00, $00, $0F, $0F, $1F, $1F, $35, $35, $6A, $6A, $77, $77, $6F, $6F, $76, $76 ; $09 9
+DB $00, $00, $00, $7F, $3F, $40, $3F, $5F, $3F, $5F, $3F, $58, $3C, $5B, $3C, $5A ; $09 9
 .end
 
 JunctionTRTile:
-DB $00, $00, $F0, $F0, $F8, $F8, $5C, $5C, $AE, $AE, $F6, $F6, $EE, $EE, $76, $76 ; $0A 10
+DB $00, $00, $00, $FE, $FC, $02, $FC, $FA, $FC, $FA, $FC, $1A, $3C, $DA, $3C, $5A ; $0A 10
 .end
 
 JunctionTTile:
-DB $00, $00, $FF, $FF, $FF, $FF, $55, $55, $AA, $AA, $F7, $F7, $EF, $EF, $76, $76 ; $0B 11
+DB $00, $00, $00, $FF, $FF, $00, $FF, $FF, $FF, $FF, $FF, $18, $3C, $DB, $3C, $5A ; $0B 11
 .end
 
 Numbers:

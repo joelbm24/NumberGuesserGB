@@ -163,6 +163,8 @@ start_level_input:
   ld a, LEVEL_Y_MIN
   ld [arrowData_YPos], a
 
+hold_level_input:
+  halt
 level_input:
   ReadPad
 
@@ -173,7 +175,7 @@ level_input:
   ; wait til button is released
   ldh a, [_PAD_PRESSED]
   cp a, 1
-  jp z, level_input
+  jp z, hold_level_input
 
   ; up
   ldh a, [_PAD]
@@ -209,15 +211,16 @@ select_level:
   ld [attempts], a
   call initVariables
 
-  GetDisplayNumber max_attempts, display_max_attempts, 2
   GetDisplayNumber attempts, display_attempts, 2
+  GetDisplayNumber max_attempts, display_max_attempts, 2
 
   ld a, 3
   ldh [game_state], a
 
-
   jp input
 
+hold_input:
+  halt
 input:
 	ReadPad
 
@@ -228,7 +231,7 @@ input:
   ; wait til button is released
   ldh a, [_PAD_PRESSED]
   cp a, 1
-  jp z, input
+  jp z, hold_input
 
   ldh a, [_PAD]
 	and PADF_UP

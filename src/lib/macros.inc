@@ -26,14 +26,11 @@ macro ReadPad
 
 macro DrawNumber ; TO_AREA, TILES_START, AMOUNT
   ld hl, \1
-  FOR N, \3-1, 0, -1
+  FOR N, \3 - 1, -1, -1
     ld a, [\2+{d:N}]
     add '0'
     ld [hli], a
   ENDR
-    ld a, [\2]
-    add '0'
-ld [hl], a
 endm
 
 macro PadPressed
