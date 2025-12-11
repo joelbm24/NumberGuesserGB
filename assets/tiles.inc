@@ -1,5 +1,7 @@
 ; vim: ft=gbasm
 
+def TILESET = 1
+
 Empty:
 DB $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; $00 0
 .end
@@ -8,6 +10,7 @@ ArrowTile:
 DB $C0, $C0, $E0, $E0, $F0, $F0, $F8, $F8, $F8, $F8, $F0, $F0, $E0, $E0, $C0, $C0 ; $01 1
 .end
 
+IF TILESET == 0
 VerticalBorderTile:
 DB $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A, $3C, $5A ; $02 2
 .end
@@ -47,6 +50,48 @@ DB $00, $00, $00, $FE, $FC, $02, $FC, $FA, $FC, $FA, $FC, $1A, $3C, $DA, $3C, $5
 JunctionTTile:
 DB $00, $00, $00, $FF, $FF, $00, $FF, $FF, $FF, $FF, $FF, $18, $3C, $DB, $3C, $5A ; $0B 11
 .end
+
+ELIF TILESET == 1
+VerticalBorderTile:
+DB $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28, $28 ; $02 2
+.end
+
+HorizontalBorderTile:
+DB $00, $00, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $FF, $FF, $00, $00, $00, $00 ; $03 3
+.end
+
+JunctionBLTile:
+DB $14, $14, $1A, $1A, $2D, $2D, $7E, $7E, $42, $42, $25, $25, $18, $18, $00, $00 ; $04 4
+.end
+
+JunctionBTile:
+DB $28, $28, $28, $28, $EF, $EF, $00, $00, $FF, $FF, $FF, $FF, $00, $00, $00, $00 ; $05 5
+.end
+
+JunctionBRTile:
+DB $28, $28, $58, $58, $AC, $AC, $7E, $7E, $42, $42, $A4, $A4, $18, $18, $00, $00 ; $06 6
+.end
+
+JunctionLTile:
+DB $28, $28, $28, $28, $2F, $2F, $20, $20, $2F, $2F, $2F, $2F, $28, $28, $28, $28 ; $07 7
+.end
+
+JunctionRTile:
+DB $28, $28, $28, $28, $E8, $E8, $08, $08, $E8, $E8, $E8, $E8, $28, $28, $28, $28 ; $08 8
+.end
+
+JuntionTLTile:
+DB $00, $00, $18, $18, $2D, $2D, $7E, $7E, $42, $42, $25, $25, $1A, $1A, $14, $14 ; $09 9
+.end
+
+JunctionTRTile:
+DB $00, $00, $18, $18, $AC, $AC, $7E, $7E, $42, $42, $A4, $A4, $58, $58, $28, $28 ; $0A 10
+.end
+
+JunctionTTile:
+DB $00, $00, $00, $00, $FF, $FF, $00, $00, $EF, $EF, $EF, $EF, $28, $28, $28, $28 ; $0B 11
+.end
+ENDC
 
 Numbers:
 DB $00, $00, $38, $38, $4C, $4C, $C6, $C6, $C6, $C6, $64, $64, $38, $38, $00, $00 ; $0C 12
